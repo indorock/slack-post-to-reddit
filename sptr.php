@@ -3,62 +3,88 @@
 require("./lib/class.redditconnector.php");
 require("./lib/class.slackconnector.php");
 
+function sptr_log($data){
+    $dt = new DateTime();
+    $fs = file_put_contents('data/log.txt', $data ." Datetime:".$dt->format('Y-m-d H:i:s')."\r\n", FILE_APPEND);
+}
+
+function sptr_logerror($data, $halt=true){
+    $dt = new DateTime();
+    $fs = file_put_contents('data/error_log.txt', "ERROR: ". $data ." Datetime:".$dt->format('Y-m-d H:i:s')."\r\n", FILE_APPEND);
+    if($halt)
+        die($data);
+}
 
 $data = null;
 
 $payload = file_get_contents('php://input');
 if(!$payload)
-    die('no_payload');
+    sptr_logerror('no_payload');
+
 
 $rc = new RedditConnector();
-$rc->checkToken();
+$ret = $rc->checkToken();
+if($ret !== true)
+    sptr_logerror($ret);
+
 
 $data = json_decode($payload);
 if(!$data->token)
-    die('no_token');
+    sptr_logerror('no_token');
 
 $sc = new SlackConnector();
 $token = $sc->getToken();
+if(!$token)
+    sptr_logerror('cannot_get_slack_token');
+
 
 if($token != $data->token)
-    die('token_mismatch');
+    log_error('token_mismatch');
+
 
 if(!$data->event)
-    die('missing_event_data');
+    sptr_logerror('missing_event_data');
+
 
 $event = $data->event;
 
 if($event->type != 'message')
     die($event->type.' eventtype_not_supported');
 
-//if($event->channel != 'C63M3RX9T')
-//    die('wrong_source_channel');
+
+if(!$sc->checkChannelId($event->channel))
+    die('wrong_source_channel');
 
 
-$title = 'Slack Event received '.$data->event_id;
+
+$title = 'Slack Message received '.$data->event_id;
+$postdata = ['title' => $title];
 $url = null;
 
 $message = $event->message;
 if($message->attachments){
     $attachment = $attachments[0];
     if($attachment->service_name && $attachment->service_name == 'Spotify'){
-        $title = $attachment->title . " [posted by ".$sc->getUsername($message->user)."]";
+        $postdata['title'] = $attachment->title . " [posted by ".$sc->getUsername($message->user)."]";
         $url = $attachment->title_link;
     }
-
-    if(!$url)
-        die('no_url_found');
-
-    $postdata = ['title' => $title, 'url' => $url];
-    $res = $rc->postLink($postdata);
-
 }else{
-    $postdata = ['title' => $title, 'text' => print_r($data, true)];
+    $text = $event->text;
+    $matches = [];
+    if(preg_match('/(https:\/\/open\.spotify\.com\/track\/[a-zA-Z0-9]+)/', $text, $matches)){
+        $url = $matches[1];
+    }
+}
+
+if($url){
+    $postdata['url'] = $url;
+    $res = $rc->postLink($postdata);
+}else{
+    $postdata['text'] = print_r($data, true);
     $res = $rc->postText($postdata);
 }
 
 print_r($res);
-
 
 //$response = $client->fetch("https://www.reddit.com/r/pics/search.json?q=kittens&sort=new");
 

@@ -15,6 +15,7 @@
         <item name="client_id">3500676635.207587573427</item>
         <item name="client_secret">938dc68c1d7eb6e43d7967697e0a2be1</item>
         <item name="verification_token">EHEc3q6oLOfqYao5ffXW8IWF</item>
+        <item name="allowed_channel_ids">C67DBDHQB,C63M3RX9T</item>
     </group>
 
 

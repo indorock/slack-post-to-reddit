@@ -15,6 +15,8 @@ require('./lib/class.redditconnector.php');
 $rc = new RedditConnector();
 
 if (isset($_GET["start"]))
-	$rc->getTokenAuth();
+	$ret = $rc->getTokenAuth();
 elseif (isset($_GET["code"]))
-	$rc->getAccessToken();
+	$ret = $rc->getAccessToken();
+
+echo $ret;

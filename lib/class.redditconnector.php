@@ -68,11 +68,11 @@ class RedditConnector{
 
         $accessTokenResult = $response["result"];
         if(array_key_exists('error', $accessTokenResult))
-            die('error getting token! error: '.$accessTokenResult['error']);
+            return 'error getting token! error: '.$accessTokenResult['error'];
 
         $new_access_token = $accessTokenResult["access_token"];
         if($new_access_token == self::$access_token) {
-            return 'current access token still valid, nothing to do here';
+            return true;
         }
 
         $token_node = self::$xpath_query->get_node('//settings/group[@type="reddit"]/item[@name="access_token"]');
@@ -81,7 +81,7 @@ class RedditConnector{
         self::$xpath_query->saveFile();
 
         self::$access_token = $new_access_token;
-        return "new access token saved!";
+        return true;
 
     }
 
@@ -105,9 +105,9 @@ class RedditConnector{
         $updated_at = $token_node->getAttribute('updated_at');
 
         if(time() - $updated_at >= 3600){
-            self::getAccessToken('refresh_token');
+            return self::getAccessToken('refresh_token');
         }
-
+        return true;
     }
 
     static function postLink($params){
