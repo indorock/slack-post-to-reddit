@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings>
+
+    <group type="reddit">
+        <item name="user_agent">SPTR/0.1 by Indorock</item>
+        <item name="client_id">4xZDGiF9W6_x-w</item>
+        <item name="client_secret">WIPOnbtiHBayBou0Sng_IB9MaNo</item>
+        <item name="redirect_url">http://apps.offcentric.com/slack-post-to-reddit/sptr.php</item>
+        <item name="access_token" updated_at="1499844358">RqCMA1FYcR1ELWmwtJBYogsHuJ0</item>
+        <item name="refresh_token">13284943115-6anZS4WDLRRys_XN1yi0CiZVkvY</item>
+        <item name="subreddit">DeuntjesDumpert</item>
+    </group>
+
+    <group type="slack">
+        <item name="client_id">3500676635.207587573427</item>
+        <item name="client_secret">938dc68c1d7eb6e43d7967697e0a2be1</item>
+        <item name="verification_token">EHEc3q6oLOfqYao5ffXW8IWF</item>
+    </group>
+
+
+</settings>
