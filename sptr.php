@@ -1,5 +1,7 @@
 <?php
 
+require('./lib/xpath.query.php');
+require("./vendor/autoload.php");
 require("./lib/class.redditconnector.php");
 require("./lib/class.slackconnector.php");
 

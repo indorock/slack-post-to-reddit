@@ -1,9 +1,7 @@
 <?php
 
-require_once('./lib/xpath.query.php');
 
-class SlackConnector
-{
+class SlackConnector{
 
     private static $xpath_query;
     private static $client_id;

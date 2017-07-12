@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings>
+
+    <group type="reddit">
+        <item name="user_agent">SPTR/0.1 by Indorock</item>
+        <item name="client_id"></item>
+        <item name="client_secret"></item>
+        <item name="redirect_url"></item>
+        <item name="access_token" updated_at=""></item>
+        <item name="refresh_token"></item>
+        <item name="subreddit"></item>
+    </group>
+
+    <group type="slack">
+        <item name="client_id"></item>
+        <item name="client_secret"></item>
+        <item name="verification_token"></item>
+        <item name="allowed_channel_ids"></item>
+    </group>
+
+</settings>

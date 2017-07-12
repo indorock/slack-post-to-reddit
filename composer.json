@@ -16,7 +16,7 @@
   ],
   "require": {
     "php": ">=7.0",
-    "adoy/oauth": "1.3.0"
+    "adoy/oauth2": "1.3.0"
   },
   "config": {
   },

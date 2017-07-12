@@ -1,3 +1,7 @@
+composer.lock
 composer.phar
 vendor
 .idea
+settings.xml
+error_log.txt
+log.txt

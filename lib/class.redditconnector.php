@@ -1,11 +1,5 @@
 <?php
 
-require_once('./lib/xpath.query.php');
-require("./lib/oauth2/Client.php");
-require("./lib/oauth2/GrantType/IGrantType.php");
-require("./lib/oauth2/GrantType/AuthorizationCode.php");
-require("./lib/oauth2/GrantType/RefreshToken.php");
-
 class RedditConnector{
 
     private static $xpath_query;
