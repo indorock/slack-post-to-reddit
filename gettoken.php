@@ -10,7 +10,8 @@ if (isset($_GET["error"])) {
 }
 
 require('./lib/class.redditconnector.php');
-
+require('./lib/class.slackconnector.php');
+require('./lib/class.spotifyconnector.php');
 
 $rc = new RedditConnector();
 

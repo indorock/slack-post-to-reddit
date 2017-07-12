@@ -17,14 +17,21 @@ function sptr_logerror($data, $halt=true){
         die($data);
 }
 
+$rc = new RedditConnector();
+
+if (isset($_GET["newtoken"])) {
+    $ret = $rc->getTokenAuth();
+}elseif (isset($_GET["code"])) {
+    $ret = $rc->getAccessToken();
+    die($ret);
+}
+
 $data = null;
 
 $payload = file_get_contents('php://input');
 if(!$payload)
     sptr_logerror('no_payload');
 
-
-$rc = new RedditConnector();
 $ret = $rc->checkToken();
 if($ret !== true)
     sptr_logerror($ret);
@@ -34,6 +41,7 @@ $data = json_decode($payload);
 if(!$data->token)
     sptr_logerror('no_token');
 
+
 $sc = new SlackConnector();
 $token = $sc->getToken();
 if(!$token)
@@ -41,7 +49,7 @@ if(!$token)
 
 
 if($token != $data->token)
-    log_error('token_mismatch');
+    sptr_logerror('token_mismatch');
 
 
 if(!$data->event)
@@ -54,36 +62,36 @@ if($event->type != 'message')
     die($event->type.' eventtype_not_supported');
 
 
+if($event->deleted_ts)
+    die('skip_delete_event');
+
 if(!$sc->checkChannelId($event->channel))
     die('wrong_source_channel');
 
 
-
 $title = 'Slack Message received '.$data->event_id;
-$postdata = ['title' => $title];
 $url = null;
 
 $message = $event->message;
 if($message->attachments){
-    $attachment = $attachments[0];
-    if($attachment->service_name && $attachment->service_name == 'Spotify'){
-        $postdata['title'] = $attachment->title . " [posted by ".$sc->getUsername($message->user)."]";
+    $attachment = $message->attachments[0];
+    if($attachment->service_name && strtolower($attachment->service_name) == 'spotify'){
+        $title = $attachment->title . " [posted by ".$sc->getUsername($message->user)."]";
         $url = $attachment->title_link;
     }
 }else{
     $text = $event->text;
     $matches = [];
-    if(preg_match('/(https:\/\/open\.spotify\.com\/track\/[a-zA-Z0-9]+)/', $text, $matches)){
-        $url = $matches[1];
-    }
+//    if(preg_match('/(https:\/\/open\.spotify\.com\/track\/[a-zA-Z0-9]+)/', $text, $matches)){
+//        $url = $matches[1];
+//    }
 }
-
 if($url){
-    $postdata['url'] = $url;
+    $postdata = ['title' => $title, 'url' => $url];
     $res = $rc->postLink($postdata);
 }else{
-    $postdata['text'] = print_r($data, true);
-    $res = $rc->postText($postdata);
+//    $postdata = ['title' => $title, 'text' => print_r($data, true)];
+//    $res = $rc->postText($postdata);
 }
 
 print_r($res);

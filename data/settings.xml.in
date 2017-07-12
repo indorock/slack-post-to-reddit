@@ -12,9 +12,11 @@
     </group>
 
     <group type="slack">
+        <item name="access_token" updated_at=""></item>
         <item name="client_id"></item>
         <item name="client_secret"></item>
         <item name="verification_token"></item>
+        <item name="redirect_url"></item>
         <item name="allowed_channel_ids"></item>
     </group>
 
