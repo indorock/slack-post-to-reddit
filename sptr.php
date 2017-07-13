@@ -21,6 +21,9 @@ $rc = new RedditConnector();
 
 if (isset($_GET["newtoken"])) {
     $ret = $rc->getTokenAuth();
+}elseif (isset($_GET["refreshtoken"])) {
+    $ret = $rc->getAccessToken('refresh_token');
+    die($ret);
 }elseif (isset($_GET["code"])) {
     $ret = $rc->getAccessToken();
     die($ret);
@@ -75,10 +78,10 @@ $url = null;
 $message = $event->message;
 if($message->attachments){
     $attachment = $message->attachments[0];
-    if($attachment->service_name && strtolower($attachment->service_name) == 'spotify'){
+//    if($attachment->service_name && strtolower($attachment->service_name) == 'spotify'){
         $title = $attachment->title . " [posted by ".$sc->getUsername($message->user)."]";
         $url = $attachment->title_link;
-    }
+//    }
 }else{
     $text = $event->text;
     $matches = [];

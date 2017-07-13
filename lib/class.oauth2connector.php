@@ -63,12 +63,13 @@ class OAuth2Connector{
         $response = $this->client->getAccessToken($this->accesstoken_url, $grant_type, $params);
 
         echo('<strong>Response for access token:</strong><pre>');
+        echo "refresh_token:".$this->refresh_token;
         print_r($response);
         echo('</pre>');
-
+        sptr_log(print_r($response, true));
         $accessTokenResult = $response["result"];
         if(array_key_exists('error', $accessTokenResult))
-            return 'error getting token! error: '.$accessTokenResult['error'];
+            return 'error getting token! url: '.$this->accesstoken_url.' granttype:'.$grant_type.' error: '.$accessTokenResult['error'] . 'details:'.print_r($accessTokenResult, true);
 
         $new_access_token = $accessTokenResult["access_token"];
         if($new_access_token == $this->access_token) {
@@ -83,7 +84,7 @@ class OAuth2Connector{
 
         if($refresh_token != $this->refresh_token) {
             $refresh_node = $this->xpath_query->get_node('//settings/group[@type="'.$this->group.'"]/item[@name="refresh_token"]');
-            $this->xpath_query->set_value($refresh_node, $new_access_token);
+            $this->xpath_query->set_value($refresh_node, $refresh_token);
             $this->xpath_query->set_attribute($refresh_node, 'updated_at', time());
         }
 
