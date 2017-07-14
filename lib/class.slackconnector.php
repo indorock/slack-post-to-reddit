@@ -30,13 +30,20 @@ class SlackConnector extends OAuth2Connector{
     }
 
     public function getUsername($user_id){
-        sptr_log('get username for '.$user_id);
+        self::sptr_log('get username for '.$user_id);
         $ret = $this->client->fetch('https://slack.com/api/users.info?token='.$this->access_token.'&user='.$user_id);
-        sptr_log(print_r($ret, true));
         if(!$ret || $ret['result']['error']) {
-            sptr_logerror('cannot fetch slack user info!', false);
+            self::sptr_logerror('cannot fetch slack user info!', false);
             return $user_id;
         }
         return $ret['result']['user']['name'];
+    }
+
+    public function deleteMessage($ts, $user_id, $channel_id){
+        if(!$this->checkChannelId($channel_id))
+            return;
+        $ret = $this->client->fetch('https://slack.com/api/chat.delete?token='.$this->access_token.'&ts='.$ts.'&channel='.$channel_id);
+        $name = $this->getUsername($user_id);
+        $ret = $this->client->fetch('https://slack.com/api/chat.postMessage?token='.$this->access_token.'&channel='.$channel_id.'&text='.urlencode('Yo '.$name.', ik moest je laatste bericht verwijderen, omdat het blijkbaar geen link is. Alléén deuntjes hier dumpen, gesnopen?'));
     }
 }

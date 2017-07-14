@@ -60,13 +60,13 @@ class OAuth2Connector{
         else
             $params = ["code" => $_GET["code"], "redirect_uri" => $this->redirect_url];
 
+        self::sptr_log($params);
         $response = $this->client->getAccessToken($this->accesstoken_url, $grant_type, $params);
-
         echo('<strong>Response for access token:</strong><pre>');
         echo "refresh_token:".$this->refresh_token;
         print_r($response);
         echo('</pre>');
-        sptr_log(print_r($response, true));
+        self::sptr_log(print_r($response, true));
         $accessTokenResult = $response["result"];
         if(array_key_exists('error', $accessTokenResult))
             return 'error getting token! url: '.$this->accesstoken_url.' granttype:'.$grant_type.' error: '.$accessTokenResult['error'] . 'details:'.print_r($accessTokenResult, true);
@@ -82,7 +82,7 @@ class OAuth2Connector{
         $this->xpath_query->set_value($token_node, $new_access_token);
         $this->xpath_query->set_attribute($token_node, 'updated_at', time());
 
-        if($refresh_token != $this->refresh_token) {
+        if($refresh_token && $refresh_token != $this->refresh_token) {
             $refresh_node = $this->xpath_query->get_node('//settings/group[@type="'.$this->group.'"]/item[@name="refresh_token"]');
             $this->xpath_query->set_value($refresh_node, $refresh_token);
             $this->xpath_query->set_attribute($refresh_node, 'updated_at', time());
@@ -114,6 +114,19 @@ class OAuth2Connector{
         return true;
     }
 
+    public static function sptr_log($data){
+        $dt = new DateTime();
+        if(is_array($data) || is_object($data))
+            $data = print_r($data, true);
+        $fs = file_put_contents('data/log.txt', $data ." Datetime:".$dt->format('Y-m-d H:i:s')."\r\n", FILE_APPEND);
+    }
 
-
+    public static function sptr_logerror($data, $halt=true){
+        $dt = new DateTime();
+        if(is_array($data) || is_object($data))
+            $data = print_r($data, true);
+        $fs = file_put_contents('data/error_log.txt', "ERROR: ". $data ." Datetime:".$dt->format('Y-m-d H:i:s')."\r\n", FILE_APPEND);
+        if($halt)
+            die($data);
+    }
 }

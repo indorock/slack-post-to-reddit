@@ -5,17 +5,7 @@ require("./vendor/autoload.php");
 require("./lib/class.redditconnector.php");
 require("./lib/class.slackconnector.php");
 
-function sptr_log($data){
-    $dt = new DateTime();
-    $fs = file_put_contents('data/log.txt', $data ." Datetime:".$dt->format('Y-m-d H:i:s')."\r\n", FILE_APPEND);
-}
-
-function sptr_logerror($data, $halt=true){
-    $dt = new DateTime();
-    $fs = file_put_contents('data/error_log.txt', "ERROR: ". $data ." Datetime:".$dt->format('Y-m-d H:i:s')."\r\n", FILE_APPEND);
-    if($halt)
-        die($data);
-}
+$linted_services = ['spotify' => 'open.spotify.com','soundcloud' => 'soundcloud.com', 'youtube' => 'youtube.com', 'youtube2' => 'youtu.be'];
 
 $rc = new RedditConnector();
 
@@ -33,30 +23,30 @@ $data = null;
 
 $payload = file_get_contents('php://input');
 if(!$payload)
-    sptr_logerror('no_payload');
+    OAuth2Connector::sptr_logerror('no_payload');
 
 $ret = $rc->checkToken();
 if($ret !== true)
-    sptr_logerror($ret);
+    OAuth2Connector::sptr_logerror($ret);
 
 
 $data = json_decode($payload);
 if(!$data->token)
-    sptr_logerror('no_token');
+    OAuth2Connector::sptr_logerror('no_token');
 
 
 $sc = new SlackConnector();
 $token = $sc->getToken();
 if(!$token)
-    sptr_logerror('cannot_get_slack_token');
+    OAuth2Connector::sptr_logerror('cannot_get_slack_token');
 
 
 if($token != $data->token)
-    sptr_logerror('token_mismatch');
+    OAuth2Connector::sptr_logerror('token_mismatch');
 
 
 if(!$data->event)
-    sptr_logerror('missing_event_data');
+    OAuth2Connector::sptr_logerror('missing_event_data');
 
 
 $event = $data->event;
@@ -74,25 +64,46 @@ if(!$sc->checkChannelId($event->channel))
 
 $title = 'Slack Message received '.$data->event_id;
 $url = null;
+$ignore_post = false;
 
 $message = $event->message;
+OAuth2Connector::sptr_log($event);
 if($message->attachments){
     $attachment = $message->attachments[0];
-//    if($attachment->service_name && strtolower($attachment->service_name) == 'spotify'){
+    if($attachment->service_name && in_array(strtolower($attachment->service_name), array_keys($linted_services))){
         $title = $attachment->title . " [posted by ".$sc->getUsername($message->user)."]";
         $url = $attachment->title_link;
-//    }
+    }
+    if($event->previous_message)
+        $previous_message = $event->previous_message->ts;
 }else{
     $text = $event->text;
     $matches = [];
-//    if(preg_match('/(https:\/\/open\.spotify\.com\/track\/[a-zA-Z0-9]+)/', $text, $matches)){
-//        $url = $matches[1];
-//    }
+    if(preg_match('/.*(https?:\/\/[a-z0-9]+\.([a-z0-9]+\.)?([a-z]{2,3})(\/[^\s>]+)?).*/', $text, $matches)){
+        $m = $matches[1];
+        foreach($linted_services as $service){
+            if(strpos($m, $service)) {
+                $ignore_post = true;
+                break;
+            }
+        }
+        if(!$ignore_post){
+            $url = $matches[1];
+            $title = $url;
+        }
+    }
 }
+
 if($url){
     $postdata = ['title' => $title, 'url' => $url];
     $res = $rc->postLink($postdata);
+
+    //if($previous_message)
+    //    $res = $rc->deleteLink($postdata);
 }else{
+    if(!$event->event_ts || !$event->channel || $event->subtype == 'bot_message' || $ignore_post)
+        return;
+    $sc->deleteMessage($event->event_ts, $event->user, $event->channel);
 //    $postdata = ['title' => $title, 'text' => print_r($data, true)];
 //    $res = $rc->postText($postdata);
 }
