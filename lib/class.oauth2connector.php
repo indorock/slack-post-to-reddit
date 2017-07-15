@@ -72,17 +72,19 @@ class OAuth2Connector{
             return 'error getting token! url: '.$this->accesstoken_url.' granttype:'.$grant_type.' error: '.$accessTokenResult['error'] . 'details:'.print_r($accessTokenResult, true);
 
         $new_access_token = $accessTokenResult["access_token"];
+        if($grant_type=='refresh_token' && !$new_access_token)
+            self::sptr_logerror('error in getting access token!!');
+
         if($new_access_token == $this->access_token) {
             return true;
         }
-
-        $refresh_token = $accessTokenResult["refresh_token"];
 
         $token_node = $this->xpath_query->get_node('//settings/group[@type="'.$this->group.'"]/item[@name="access_token"]');
         $this->xpath_query->set_value($token_node, $new_access_token);
         $this->xpath_query->set_attribute($token_node, 'updated_at', time());
 
-        if($refresh_token && $refresh_token != $this->refresh_token) {
+        $refresh_token = $accessTokenResult["refresh_token"];
+        if($grant_type == 'authorization_code' && $refresh_token && $refresh_token != $this->refresh_token) {
             $refresh_node = $this->xpath_query->get_node('//settings/group[@type="'.$this->group.'"]/item[@name="refresh_token"]');
             $this->xpath_query->set_value($refresh_node, $refresh_token);
             $this->xpath_query->set_attribute($refresh_node, 'updated_at', time());
