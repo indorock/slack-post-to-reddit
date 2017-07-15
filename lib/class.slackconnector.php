@@ -30,13 +30,37 @@ class SlackConnector extends OAuth2Connector{
     }
 
     public function getUsername($user_id){
-        sptr_log('get username for '.$user_id);
+        self::log('get username for '.$user_id);
         $ret = $this->client->fetch('https://slack.com/api/users.info?token='.$this->access_token.'&user='.$user_id);
-        sptr_log(print_r($ret, true));
         if(!$ret || $ret['result']['error']) {
-            sptr_logerror('cannot fetch slack user info!', false);
+            self::logerror('cannot fetch slack user info!', false);
             return $user_id;
         }
         return $ret['result']['user']['name'];
+    }
+
+    public function deleteMessage($ts, $user_id, $channel_id){
+        if(!$this->checkChannelId($channel_id))
+            return;
+        $ret = $this->client->fetch('https://slack.com/api/chat.delete?token='.$this->access_token.'&ts='.$ts.'&channel='.$channel_id);
+        $name = $this->getUsername($user_id);
+        return $this->doBotMessage("Yo [name], ik moest je laatste bericht verwijderen, omdat het blijkbaar geen link is. Alléén deuntjes hier dumpen, gesnopen?", $channel_id, ['name' => $name]);
+    }
+
+    public function doBotMessage($msg, $channel_id, $params=[]){
+        if(!$this->checkChannelId($channel_id))
+            return;
+
+        if(is_object($msg) || is_array($msg))
+            $msg = var_export($msg, true);
+
+        if(strpos($msg, 'bot_message')!==false) // we don't output payload from bot_message to prevent endless loop
+            return;
+
+        foreach($params as $key => $val)
+            $msg = str_replace('['.$key.']', $val, $msg);
+
+        $url = 'https://slack.com/api/chat.postMessage?token='.$this->access_token.'&channel='.$channel_id.'&text='.urlencode($msg);
+        return $this->client->fetch($url);
     }
 }
