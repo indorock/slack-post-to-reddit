@@ -34,7 +34,7 @@ if(strpos($payload, 'debugdata')!==false)
 $data = json_decode($payload);
 $event = $data->event;
 $channel = $event->channel;
-$bot_message = $event->subtype == 'bot_message';
+$system_message = in_array($event->subtype, ['channel_join', 'channel_leave', 'channel_topic', 'channel_name', 'channel_purpose'];
 
 if(!$event)
     $debug_data[] = OAuth2Connector::logerror('missing_event_data',!$output_debug);
@@ -67,7 +67,7 @@ if($event->deleted_ts)
     die('skip_delete_event');
 
 
-if(count($debug_data) && !$bot_message){
+if(count($debug_data) && !$system_message){
     $debug_data[] = $data;
     $sc->doBotMessage($debug_data, $channel);
     die();
@@ -112,10 +112,10 @@ if($url) {
 
     //if($previous_message)
     //    $res = $rc->deleteLink($postdata);
-}elseif($output_debug && !$bot_message) {
+}elseif($output_debug && !$system_message) {
     $sc->doBotMessage($data,$event->channel);
 }else{
-    if(!$event->event_ts || !$event->channel || $bot_message || $ignore_post)
+    if(!$event->event_ts || !$event->channel || $system_message || $ignore_post)
         return;
     $sc->deleteMessage($event->event_ts, $event->user, $event->channel);
 //    $postdata = ['title' => $title, 'text' => print_r($data, true)];
