@@ -34,7 +34,7 @@ if(strpos($payload, 'debugdata')!==false)
 $data = json_decode($payload);
 $event = $data->event;
 $channel = $event->channel;
-$system_message = in_array($event->subtype, ['channel_join', 'channel_leave', 'channel_topic', 'channel_name', 'channel_purpose'];
+$system_message = in_array($event->subtype, ['channel_join', 'channel_leave', 'channel_topic', 'channel_name', 'channel_purpose']);
 
 if(!$event)
     $debug_data[] = OAuth2Connector::logerror('missing_event_data',!$output_debug);
@@ -122,7 +122,6 @@ if($url) {
 //    $res = $rc->postText($postdata);
 }
 
-print_r($res);
 
 //$response = $client->fetch("https://www.reddit.com/r/pics/search.json?q=kittens&sort=new");
 
