@@ -5,7 +5,7 @@ require("./vendor/autoload.php");
 require("./lib/class.redditconnector.php");
 require("./lib/class.slackconnector.php");
 
-$linted_services = ['spotify' => 'open.spotify.com','soundcloud' => 'soundcloud.com', 'youtube' => 'youtube.com', 'youtube2' => 'youtu.be'];
+$linted_services = ['spotify' => 'open.spotify.com','soundcloud' => 'soundcloud.com', 'youtube' => 'youtube.com', 'youtube2' => 'youtu.be', 'reddit' => 'reddit.com'];
 $output_debug = false;
 $debug_data = [];
 
@@ -107,8 +107,21 @@ if($message->attachments){
 }
 
 if($url) {
-    $postdata = ['title' => $title, 'url' => $url];
+    $username = $sc->getUsername($event->message->user);
+    $postdata = ['title' => html_entity_decode($title), 'url' => $url];
     $res = $rc->postLink($postdata);
+    OAuth2Connector::log($res);
+    $data = $res['result']['json'];
+    if($data['errors'] && count($data['errors'])){
+        if($data['errors'][0][0] == 'ALREADY_SUB')
+            $sc->doBotMessage("Sorrie hoor ".$username." maar dit deuntje werd reeds gedumpt. Let nou is op!",$event->channel);
+        else
+            $sc->doBotMessage("Sorrie hoor ".$username." maar er is een of andere fout opgetreden. Laat mark maar hierover weten",$event->channel);
+
+    }else{
+        $redditurl = $res['result']['json']['data']['url'];
+        $sc->doBotMessage("Goedzo ".$username."! Je deuntje is gedumpt. <$redditurl|Check het.>",$event->channel);
+    }
 
     //if($previous_message)
     //    $res = $rc->deleteLink($postdata);
@@ -117,7 +130,9 @@ if($url) {
 }else{
     if(!$event->event_ts || !$event->channel || $system_message || $ignore_post)
         return;
-    $sc->deleteMessage($event->event_ts, $event->user, $event->channel);
+
+    if($event->subtype != 'bot_message')
+        $sc->deleteMessage($event->event_ts, $event->user, $event->channel);
 //    $postdata = ['title' => $title, 'text' => print_r($data, true)];
 //    $res = $rc->postText($postdata);
 }
