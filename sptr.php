@@ -32,6 +32,12 @@ if(strpos($payload, 'debugdata')!==false)
     $output_debug = true;
 
 $data = json_decode($payload);
+
+if(isset($data->body) && isset($data->body->challenge)){
+    echo $data->body->challenge;
+    die();
+}
+
 $event = $data->event;
 $channel = $event->channel;
 $system_message = in_array($event->subtype, ['channel_join', 'channel_leave', 'channel_topic', 'channel_name', 'channel_purpose']);
@@ -110,7 +116,9 @@ if($url) {
     $username = $sc->getUsername($event->message->user);
     $postdata = ['title' => html_entity_decode($title), 'url' => $url];
     $res = $rc->postLink($postdata);
+    OAuth2Connector::log("POSTED LINK");
     OAuth2Connector::log($res);
+    OAuth2Connector::log("...............");
     $data = $res['result']['json'];
     if($data['errors'] && count($data['errors'])){
         if($data['errors'][0][0] == 'ALREADY_SUB')
@@ -131,6 +139,7 @@ if($url) {
     if(!$event->event_ts || !$event->channel || $system_message || $ignore_post)
         return;
 
+//    $sc->doBotMessage(print_r($event, true));
     if($event->subtype != 'bot_message')
         $sc->deleteMessage($event->event_ts, $event->user, $event->channel);
 //    $postdata = ['title' => $title, 'text' => print_r($data, true)];
