@@ -1,5 +1,4 @@
 <?php
-
 require('./lib/xpath.query.php');
 require("./vendor/autoload.php");
 require("./lib/class.redditconnector.php");
@@ -22,6 +21,7 @@ if (isset($_GET["newtoken"])) {
     die($ret);
 }
 
+
 $data = null;
 
 $payload = file_get_contents('php://input');
@@ -33,8 +33,8 @@ if(strpos($payload, 'debugdata')!==false)
 
 $data = json_decode($payload);
 
-if(isset($data->body) && isset($data->body->challenge)){
-    echo $data->body->challenge;
+if(isset($data->challenge)){
+    echo $data->challenge;
     die();
 }
 
